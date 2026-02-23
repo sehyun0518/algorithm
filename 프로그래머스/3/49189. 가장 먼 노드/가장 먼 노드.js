@@ -1,33 +1,54 @@
-function solution(n, edge) {
-  const graph = {};
-
-  for (const [a, b] of edge) {
-    if (!graph[a]) graph[a] = [];
-    if (!graph[b]) graph[b] = [];
-    graph[a].push(b);
-    graph[b].push(a);
-  }
-
-  const distance = Array(n + 1).fill(0);
-  const visited = Array(n + 1).fill(false);
-
-  const queue = [1];
-  visited[1] = true;
-
-  while (queue.length > 0) {
-    const node = queue.shift();
-
-    for (const next of graph[node]) {
-      if (!visited[next]) {
-        visited[next] = true;
-        distance[next] = distance[node] + 1;
-        queue.push(next);
-      }
+class PriorityQueue {
+    constructor(){
+        this.queue = [];
     }
-  }
+    
+    push(p, cost){
+        this.queue.push([p, cost]);
+        this.queue.sort((a, b) => a[1] - b[1]);
+    }
+    
+    pop(){
+        return this.queue.shift();
+    }
+    
+    isEmpty(){
+        return this.queue.length === 0;
+    }
+}
 
-  const maxDist = Math.max(...distance);
-  const count = distance.filter(d => d === maxDist).length;
-
-  return count;
+function solution(n, vertex) {
+    const graph = Array.from({ length: n + 1}, () => []);
+    
+    for(const [a, b] of vertex){
+        graph[a].push([b, 1]);
+        graph[b].push([a, 1]);
+    }
+    
+    const distance = Array.from({ length: n + 1 }, () => Infinity);
+    
+    distance[1] = 0;
+    
+    const pq = new PriorityQueue();
+    pq.push(1, 0);
+    
+    while(!pq.isEmpty()){
+        const [current, cost] = pq.pop();
+        
+        if(cost > distance[current]) continue;
+        for(const [next, nextCost] of graph[current]){
+            const totalCost = cost + nextCost;
+            
+            if(totalCost < distance[next]){
+                distance[next] = totalCost;
+                pq.push(next, totalCost);
+            }
+        }
+    }
+    const dir = distance.slice(1).sort((a, b) => b - a);
+    let result = 0;
+    for(const d of dir){
+        if(d === dir[0]) result ++;
+    }
+    return result;
 }
